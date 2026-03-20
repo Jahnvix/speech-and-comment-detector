@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Detector</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at top, #1a1a2e, #0f3460, #000);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: white;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 500px;
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            background: rgba(255,255,255,0.05);
+            box-shadow: 0 0 40px rgba(0,0,0,0.7);
+            text-align: center;
+            animation: fadeIn 1s ease;
+        }
+
+        @keyframes fadeIn {
+            from {opacity: 0; transform: translateY(30px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, gold, orange);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            outline: none;
+            resize: none;
+            font-size: 14px;
+            background: rgba(255,255,255,0.08);
+            color: white;
+        }
+
+        textarea:focus {
+            box-shadow: 0 0 10px gold;
+        }
+
+        .input-box {
+            position: relative;
+        }
+
+        .mic-btn {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            border: none;
+            background: gold;
+            border-radius: 50%;
+            padding: 8px;
+            cursor: pointer;
+        }
+
+        .btn {
+            margin: 10px 5px;
+            padding: 12px 18px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        .fake-btn {
+            background: linear-gradient(45deg, #ff4d4d, #ff1a1a);
+            color: white;
+        }
+
+        .hate-btn {
+            background: linear-gradient(45deg, gold, orange);
+            color: black;
+        }
+
+        .btn:hover {
+            transform: scale(1.08);
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 22px;
+            font-weight: bold;
+            min-height: 30px;
+        }
+
+        .safe {
+            color: #00ffcc;
+            text-shadow: 0 0 12px #00ffcc;
+        }
+
+        .hate {
+            color: #ff4d4d;
+            text-shadow: 0 0 12px #ff4d4d;
+        }
+
+        .confidence {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #bbb;
+        }
+
+        .loader {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .loader div {
+            width: 10px;
+            height: 10px;
+            background: white;
+            display: inline-block;
+            margin: 3px;
+            border-radius: 50%;
+            animation: bounce 1s infinite;
+        }
+
+        .loader div:nth-child(2) { animation-delay: 0.2s; }
+        .loader div:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        @media (max-width: 600px) {
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+
+    <script>
+        function showLoader() {
+            document.getElementById("loader").style.display = "block";
+        }
+
+        function clearResult() {
+            document.getElementById("result").innerHTML = "";
+            document.getElementById("confidence").innerHTML = "";
+        }
+
+        function startVoice() {
+            if (!('webkitSpeechRecognition' in window)) {
+                alert("Use Google Chrome for voice input");
+                return;
+            }
+
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = "en-US";
+
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                const text = event.results[0][0].transcript;
+                document.getElementById("textInput").value = text;
+                clearResult();
+            };
+
+            recognition.onerror = function() {
+                alert("Allow microphone access 🎤");
+            };
+        }
+    </script>
+
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>🔥 AI Detector</h1>
+
+        <form method="POST" onsubmit="showLoader()">
+
+            <div class="input-box">
+                <textarea id="textInput" name="text" rows="5" placeholder="Speak or type..." required oninput="clearResult()"></textarea>
+
+                <button type="button" class="mic-btn" onclick="startVoice()">🎤</button>
+            </div>
+
+            <br>
+
+            <button class="btn fake-btn" type="submit" name="action" value="fake">
+                Fake News
+            </button>
+
+            <button class="btn hate-btn" type="submit" name="action" value="hate">
+                Hate Speech
+            </button>
+        </form>
+
+        <div id="loader" class="loader">
+            <div></div><div></div><div></div>
+        </div>
+
+        {% if result %}
+            <div id="result" class="result 
+                {% if 'Safe' in result %}safe
+                {% elif 'Hate' in result %}hate
+                {% endif %}
+            ">
+                {{ result }}
+            </div>
+        {% else %}
+            <div id="result"></div>
+        {% endif %}
+
+        {% if confidence %}
+            <div id="confidence" class="confidence">{{ confidence }}</div>
+        {% else %}
+            <div id="confidence"></div>
+        {% endif %}
+
+    </div>
+
+</body>
+</html>
